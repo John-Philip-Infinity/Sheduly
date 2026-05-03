@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scheduly - Smart Planning</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📅</text></svg>" />
+    <style>
+      :root {
+        --bg-primary: #050816;
+        --bg-secondary: #0a1223;
+        --bg-tertiary: #0f1830;
+        --text-primary: #f8fbff;
+        --text-secondary: #adb9ff;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --accent-primary: #5af9b3;
+        --accent-secondary: #8c6cff;
+      }
+
+      [data-theme="light"] {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f5f5f5;
+        --bg-tertiary: #eeeeee;
+        --text-primary: #1a1a1a;
+        --text-secondary: #666666;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --accent-primary: #00d084;
+        --accent-secondary: #7c3aed;
+      }
+
+      * { box-sizing: border-box; }
+      html, body, #root { margin: 0; padding: 0; min-height: 100%; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; }
+
+      .page-shell { min-height: 100vh; display: grid; grid-template-rows: auto auto auto 1fr; }
+      .top-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); gap: 20px; flex-wrap: wrap; }
+      .logo { font-size: 1.5rem; font-weight: 700; margin: 0; }
+      .nav-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav-tab { padding: 10px 14px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); border-radius: 18px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; }
+      .nav-tab:hover, .nav-tab.active { background: var(--accent-primary); color: #050816; border-color: var(--accent-primary); }
+      .badge { display: inline-block; padding: 2px 6px; background: #ff6b6b; color: white; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+      .header-right { display: flex; gap: 12px; }
+      .theme-toggle, .user-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+      .user-btn { background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: white; font-weight: 700; }
+
+      .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; padding: 20px 24px 0; }
+      .metric-card { padding: 24px; border-radius: 18px; background: var(--bg-secondary); border: 1px solid var(--border-color); text-align: center; }
+      .metric-card p { margin: 0 0 12px; color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; }
+      .metric-card strong { font-size: 2rem; }
+
+      .layout-grid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px 24px 40px; }
+      .content-panel { padding: 30px; border-radius: 24px; background: var(--bg-secondary); border: 1px solid var(--border-color); }
+      .content-panel h2 { margin: 0 0 20px; font-size: 1.5rem; }
+
+      .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+      input, textarea, select, button { font: inherit; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer; }
+      button { font-weight: 700; transition: all 0.2s ease; }
+      .primary-button { grid-column: 1 / -1; background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); color: #050816; border: none; }
+      .primary-button:hover { transform: translateY(-2px); }
+
+      .timer-circle { width: 240px; height: 240px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary)); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 20px 60px rgba(90, 249, 179, 0.2); position: relative; }
+      .timer-circle::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--bg-secondary); }
+      .time { position: relative; z-index: 1; font-size: 3rem; font-weight: 700; color: var(--accent-primary); }
+
+      .auth-card { max-width: 480px; margin: 60px auto; padding: 30px; border-radius: 24px; background: var(--bg-secondary); border: 1px solid var(--border-color); }
+      .auth-card h2 { margin: 0 0 8px; font-size: 1.5rem; }
+      .auth-card p { margin: 0 0 20px; color: var(--text-secondary); }
+      .auth-form { display: grid; gap: 14px; }
+      label { display: grid; gap: 6px; font-weight: 500; }
+
+      @media (max-width: 768px) {
+        .top-header { flex-direction: column; align-items: flex-start; }
+        .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        .form-grid { grid-template-columns: 1fr; }
+        .timer-circle { width: 180px; height: 180px; }
+        .time { font-size: 2rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      class Scheduly {
+        constructor() {
+          this.user = JSON.parse(localStorage.getItem("user")) || null;
+          this.theme = localStorage.getItem("theme") || "dark";
+          this.view = "planner";
+          this.pomodoroTime = 25 * 60;
+          this.pomodoroActive = false;
+          this.pomodoroSessions = parseInt(localStorage.getItem("pomodoro")) || 0;
+          this.schedule = JSON.parse(localStorage.getItem("schedule")) || [
+            { id: "1", title: "Morning Standup", date: new Date().toISOString().slice(0, 10), time: "08:30", status: "Active" },
+            { id: "2", title: "Design Review", date: new Date().toISOString().slice(0, 10), time: "11:00", status: "Planned" },
+            { id: "3", title: "Client Demo", date: new Date().toISOString().slice(0, 10), time: "15:15", status: "Confirmed" }
+          ];
+          this.init();
+        }
+
+        init() {
+          document.documentElement.setAttribute("data-theme", this.theme);
+          this.render();
+          this.attachEvents();
+        }
+
+        attachEvents() {
+          document.addEventListener("click", (e) => {
+            if (e.target.id === "sign-out") this.signOut();
+            if (e.target.id === "theme-toggle") this.toggleTheme();
+            if (e.target.classList.contains("nav-tab")) this.setView(e.target.dataset.view);
+            if (e.target.id === "sign-in") this.signIn();
+            if (e.target.id === "add-plan") this.addPlan();
+            if (e.target.classList.contains("remove-btn")) this.removePlan(e.target.dataset.id);
+            if (e.target.id === "pomodoro-start") this.togglePomodoro();
+            if (e.target.id === "pomodoro-reset") this.resetPomodoro();
+          });
+        }
+
+        toggleTheme() {
+          this.theme = this.theme === "dark" ? "light" : "dark";
+          localStorage.setItem("theme", this.theme);
+          document.documentElement.setAttribute("data-theme", this.theme);
+          this.render();
+        }
+
+        signIn() {
+          const email = document.getElementById("email")?.value;
+          const password = document.getElementById("password")?.value;
+          if (email === "demo@sheduley.com" && password === "shedley123") {
+            this.user = { name: "Demo User", email };
+            localStorage.setItem("user", JSON.stringify(this.user));
+            this.render();
+          }
+        }
+
+        signOut() {
+          this.user = null;
+          localStorage.removeItem("user");
+          this.render();
+        }
+
+        setView(view) {
+          this.view = view;
+          this.render();
+        }
+
+        addPlan() {
+          const title = document.getElementById("plan-title")?.value;
+          const date = document.getElementById("plan-date")?.value;
+          const time = document.getElementById("plan-time")?.value;
+          if (title && date && time) {
+            this.schedule.unshift({ id: Date.now().toString(), title, date, time, status: "Planned" });
+            localStorage.setItem("schedule", JSON.stringify(this.schedule));
+            this.render();
+          }
+        }
+
+        removePlan(id) {
+          this.schedule = this.schedule.filter(item => item.id !== id);
+          localStorage.setItem("schedule", JSON.stringify(this.schedule));
+          this.render();
+        }
+
+        togglePomodoro() {
+          this.pomodoroActive = !this.pomodoroActive;
+          if (this.pomodoroActive) this.startPomodoro();
+          this.render();
+        }
+
+        resetPomodoro() {
+          this.pomodoroActive = false;
+          this.pomodoroTime = 25 * 60;
+          this.render();
+        }
+
+        startPomodoro() {
+          const interval = setInterval(() => {
+            if (!this.pomodoroActive) return clearInterval(interval);
+            this.pomodoroTime--;
+            if (this.pomodoroTime <= 0) {
+              this.pomodoroSessions++;
+              localStorage.setItem("pomodoro", this.pomodoroSessions);
+              this.pomodoroTime = 25 * 60;
+              this.pomodoroActive = false;
+            }
+            this.updateTimer();
+          }, 1000);
+        }
+
+        updateTimer() {
+          const mins = Math.floor(this.pomodoroTime / 60);
+          const secs = this.pomodoroTime % 60;
+          const el = document.getElementById("timer");
+          if (el) el.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        }
+
+        renderContent() {
+          const today = new Date().toISOString().slice(0, 10);
+          const daily = this.schedule.filter(item => item.date === today);
+          let html = "";
+
+          if (this.view === "planner") {
+            html = `<div style="display:grid;gap:12px">
+              ${daily.map(item => `<div style="padding:12px;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-color)">
+                <strong>${item.title}</strong> · ${item.time} <span style="display:inline-block;padding:2px 8px;border-radius:6px;background:rgba(90,249,179,0.1);color:#abffdd;font-size:0.85rem">${item.status}</span>
+                <button class="remove-btn" data-id="${item.id}" style="float:right;padding:4px 8px;background:rgba(255,255,255,0.1);border:none;border-radius:6px;color:var(--text-secondary);cursor:pointer">×</button>
+              </div>`).join("")}
+            </div>`;
+          } else if (this.view === "weekly") {
+            const weekDays = Array.from({length: 7}, (_, i) => {
+              const d = new Date();
+              d.setDate(d.getDate() - d.getDay() + i);
+              return d.toISOString().slice(0, 10);
+            });
+            html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px">${weekDays.map(day => {
+              const items = this.schedule.filter(s => s.date === day).length;
+              return `<div style="padding:12px;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-color);text-align:center"><p style="margin:0;font-size:0.85rem;color:var(--text-secondary)">${new Date(day).toLocaleDateString("en-US", {weekday:"short"})}</p><strong>${items}</strong></div>`;
+            }).join("")}</div>`;
+          } else if (this.view === "stats") {
+            const completed = this.schedule.filter(i => i.status === "Confirmed").length;
+            const rate = this.schedule.length > 0 ? Math.round(completed / this.schedule.length * 100) : 0;
+            html = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+              <div style="padding:16px;text-align:center;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-color)"><p style="margin:0;color:var(--text-secondary);font-size:0.9rem">Completion</p><strong style="font-size:1.8rem;color:var(--accent-primary)">${rate}%</strong></div>
+              <div style="padding:16px;text-align:center;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-color)"><p style="margin:0;color:var(--text-secondary);font-size:0.9rem">Sessions</p><strong style="font-size:1.8rem;color:var(--accent-primary)">${this.pomodoroSessions}</strong></div>
+              <div style="padding:16px;text-align:center;border-radius:12px;background:var(--bg-tertiary);border:1px solid var(--border-color)"><p style="margin:0;color:var(--text-secondary);font-size:0.9rem">Scheduled</p><strong style="font-size:1.8rem;color:var(--accent-primary)">${this.schedule.length}</strong></div>
+            </div>`;
+          } else if (this.view === "exams") {
+            html = `<p style="color:var(--text-secondary)">🎓 Exam prep and study schedules</p>`;
+          } else if (this.view === "pomodoro") {
+            const mins = Math.floor(this.pomodoroTime / 60);
+            const secs = this.pomodoroTime % 60;
+            html = `<div style="display:grid;gap:20px;align-items:center;justify-items:center">
+              <div class="timer-circle"><span class="time" id="timer">${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}</span></div>
+              <p style="margin:0;color:var(--text-secondary)">Sessions: ${this.pomodoroSessions}</p>
+              <div style="display:flex;gap:12px">
+                <button id="pomodoro-start" class="primary-button" style="width:120px">${this.pomodoroActive ? "Pause" : "Start"}</button>
+                <button id="pomodoro-reset" style="width:120px;background:var(--bg-tertiary)">Reset</button>
+              </div>
+            </div>`;
+          } else if (this.view === "ai-coach") {
+            html = `<div style="padding:20px;border-radius:12px;background:linear-gradient(135deg,var(--bg-tertiary),var(--bg-secondary));border:1px solid var(--border-color)">
+              <h4 style="margin:0 0 12px;color:var(--accent-primary)">✨ AI Tips for Today</h4>
+              <ul style="margin:0;padding-left:20px;color:var(--text-secondary)">
+                <li>You have ${daily.length} items scheduled for today.</li>
+                <li>Complete ${this.schedule.filter(i => i.status === "Planned").length} planned tasks to boost productivity.</li>
+                <li>Take a Pomodoro break to maintain focus.</li>
+              </ul>
+            </div>`;
+          }
+
+          return html;
+        }
+
+        render() {
+          const root = document.getElementById("root");
+          const today = new Date().toISOString().slice(0, 10);
+
+          if (!this.user) {
+            root.innerHTML = `
+              <div class="page-shell">
+                <div class="auth-card">
+                  <h2>📅 Scheduly</h2>
+                  <p>Sign in to access Planner, Weekly, Stats, Exams, Pomodoro & AI Coach</p>
+                  <div class="auth-form">
+                    <label>Email<input type="email" id="email" value="demo@sheduley.com" /></label>
+                    <label>Password<input type="password" id="password" value="shedley123" /></label>
+                    <button id="sign-in" class="primary-button">Sign In</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            const views = [
+              { id: "planner", icon: "📅", label: "Planner" },
+              { id: "weekly", icon: "📊", label: "Weekly" },
+              { id: "stats", icon: "📈", label: "Stats" },
+              { id: "exams", icon: "🎓", label: "Exams" },
+              { id: "pomodoro", icon: "⏱️", label: "Pomodoro" },
+              { id: "ai-coach", icon: "✨", label: "AI Coach", isNew: true }
+            ];
+
+            root.innerHTML = `
+              <div class="page-shell">
+                <header class="top-header">
+                  <h1 class="logo">📅 Scheduly</h1>
+                  <nav class="nav-tabs">
+                    ${views.map(v => `
+                      <button class="nav-tab ${v.id === this.view ? "active" : ""}" data-view="${v.id}">
+                        ${v.icon} ${v.label} ${v.isNew ? '<span class="badge">NEW</span>' : ""}
+                      </button>
+                    `).join("")}
+                  </nav>
+                  <div class="header-right">
+                    <button class="theme-toggle" id="theme-toggle">${this.theme === "dark" ? "☀️" : "🌙"}</button>
+                    <button class="user-btn" id="sign-out">${this.user.name.charAt(0)}</button>
+                  </div>
+                </header>
+
+                <div class="metrics-grid">
+                  <div class="metric-card"><p>Total</p><strong>${this.schedule.length}</strong></div>
+                  <div class="metric-card"><p>Active</p><strong>${this.schedule.filter(i => i.status === "Active").length}</strong></div>
+                  <div class="metric-card"><p>Planned</p><strong>${this.schedule.filter(i => i.status === "Planned").length}</strong></div>
+                  <div class="metric-card"><p>Confirmed</p><strong>${this.schedule.filter(i => i.status === "Confirmed").length}</strong></div>
+                </div>
+
+                <div class="layout-grid">
+                  <div class="content-panel">
+                    <h2>${views.find(v => v.id === this.view).label}</h2>
+                    ${this.renderContent()}
+                  </div>
+                  <div class="content-panel">
+                    <h2>Add Plan</h2>
+                    <div class="form-grid">
+                      <input type="text" id="plan-title" placeholder="Title" />
+                      <input type="date" id="plan-date" value="${today}" />
+                      <input type="time" id="plan-time" value="09:00" />
+                      <button id="add-plan" class="primary-button">Add Plan</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          this.attachEvents();
+        }
+      }
+
+      new Scheduly();
+    </script>
+  </body>
+</html>
